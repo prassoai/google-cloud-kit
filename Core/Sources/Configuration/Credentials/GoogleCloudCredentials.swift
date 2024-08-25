@@ -71,6 +71,43 @@ public struct GoogleServiceAccountCredentials: Codable {
     }
 }
 
+public struct SourceCredentials: Codable {
+    public let clientId: String
+    public let clientSecret: String
+    public let refreshToken: String
+    public let type: String
+}
+
+public struct ImpersonatedServiceAccountCredentials: Codable {
+    public let delegates: [String]
+    public let serviceAccountImpersonationUrl: String
+    public let sourceCredentials: SourceCredentials
+    public let type: String
+
+    // Initializer to load from a JSON string
+    public init(fromJsonString json: String) throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        if let data = json.data(using: .utf8) {
+            self = try decoder.decode(ImpersonatedServiceAccountCredentials.self, from: data)
+        } else {
+            throw CredentialLoadError.jsonLoadError
+        }
+    }
+
+    // Initializer to load from a file path
+    public init(fromFilePath path: String) throws {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        if let contents = try String(contentsOfFile: path).data(using: .utf8) {
+            self = try decoder.decode(ImpersonatedServiceAccountCredentials.self, from: contents)
+        } else {
+            throw CredentialLoadError.fileLoadError(path)
+        }
+    }
+}
+
+
 public class OAuthCredentialLoader {
     public static func getRefreshableToken(credentials: GoogleCloudCredentialsConfiguration,
                                            withConfig config: GoogleCloudAPIConfiguration,
@@ -82,6 +119,13 @@ public class OAuthCredentialLoader {
             return OAuthServiceAccount(credentials: serviceAccount,
                                        scopes: config.scope,
                                        subscription: config.subscription,
+                                       httpClient: client,
+                                       eventLoop: eventLoop)
+        }
+        
+        if let impersonatedServiceAccount = credentials.impersonatedServiceAccountCredentials {
+            return OAuthImpersonatedServiceAccount(credentials: impersonatedServiceAccount,
+                                       scopes: config.scope,
                                        httpClient: client,
                                        eventLoop: eventLoop)
         }

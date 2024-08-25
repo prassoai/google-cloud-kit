@@ -25,15 +25,17 @@ enum CredentialLoadError: GoogleCloudError {
 
 enum OauthRefreshError: GoogleCloudError {
     case noResponse(HTTPResponseStatus)
+    case invalidExpiryDate
     
     var localizedDescription: String {
         switch self {
         case .noResponse(let status):
             return "A request to the OAuth authorization server failed with response status \(status.code)."
+        case .invalidExpiryDate:
+            return "Authorization server returned an invalid expiry"
         }
     }
 }
-
 
 
 public struct GoogleCloudAPIErrorMain: GoogleCloudError, GoogleCloudModel {

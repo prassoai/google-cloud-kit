@@ -13,12 +13,26 @@ import Foundation
 
 public class OAuthApplicationDefault: OAuthRefreshable {
     let httpClient: HTTPClient
-    let credentials: GoogleApplicationDefaultCredentials
+    let clientId: String
+    let clientSecret: String
+    let refreshToken: String
+    
     private let decoder = JSONDecoder()
     private let eventLoop: EventLoop
     
     init(credentials: GoogleApplicationDefaultCredentials, httpClient: HTTPClient, eventLoop: EventLoop) {
-        self.credentials = credentials
+        self.clientId = credentials.clientId
+        self.clientSecret = credentials.clientSecret
+        self.refreshToken = credentials.refreshToken
+        self.httpClient = httpClient
+        self.eventLoop = eventLoop
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+    }
+    
+    init(clientId: String, clientSecret:String, refreshToken:String, httpClient: HTTPClient, eventLoop: EventLoop) {
+        self.clientId = clientId
+        self.clientSecret = clientSecret
+        self.refreshToken = refreshToken
         self.httpClient = httpClient
         self.eventLoop = eventLoop
         decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -29,7 +43,7 @@ public class OAuthApplicationDefault: OAuthRefreshable {
         do {
             let headers: HTTPHeaders = ["Content-Type": "application/x-www-form-urlencoded"]
             
-            let body: HTTPClient.Body = .string("client_id=\(credentials.clientId)&client_secret=\(credentials.clientSecret)&refresh_token=\(credentials.refreshToken)&grant_type=refresh_token")
+            let body: HTTPClient.Body = .string("client_id=\(clientId)&client_secret=\(clientSecret)&refresh_token=\(refreshToken)&grant_type=refresh_token")
             
             let request = try HTTPClient.Request(url: GoogleOAuthTokenUrl, method: .POST, headers: headers, body: body)
             

@@ -10,6 +10,7 @@ import Foundation
 public struct GoogleCloudCredentialsConfiguration {
     public let project: String?
     public var serviceAccountCredentials: GoogleServiceAccountCredentials?
+    public var impersonatedServiceAccountCredentials: ImpersonatedServiceAccountCredentials?
     public var applicationDefaultCredentials: GoogleApplicationDefaultCredentials?
     
     public init(projectId: String? = nil, credentialsFile: String? = nil) throws {
@@ -30,6 +31,12 @@ public struct GoogleCloudCredentialsConfiguration {
             self.serviceAccountCredentials = serviceaccount
         } else {
             self.serviceAccountCredentials = try? GoogleServiceAccountCredentials(fromJsonString: serviceAccountCredentialsPath)
+        }
+        
+        if let impersonatedServiceaccount = try? ImpersonatedServiceAccountCredentials(fromFilePath: serviceAccountCredentialsPath) {
+            self.impersonatedServiceAccountCredentials = impersonatedServiceaccount
+        } else {
+            self.impersonatedServiceAccountCredentials = try? ImpersonatedServiceAccountCredentials(fromJsonString: serviceAccountCredentialsPath)
         }
         
         if let defaultcredentials = try? GoogleApplicationDefaultCredentials(fromFilePath: serviceAccountCredentialsPath) {
